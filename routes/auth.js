@@ -77,7 +77,7 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Find user
+    // Find user - pastikan role ikut diambil
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ 
@@ -98,11 +98,21 @@ router.post('/login', [
     // Generate token
     const token = generateToken(user._id);
 
+    // Pastikan role ikut dikembalikan
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role, // Pastikan role ikut
+      avatar: user.avatar,
+      isVerified: user.isVerified
+    };
+
     res.json({
       success: true,
       message: 'Login berhasil',
       token,
-      user
+      user: userResponse
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -113,10 +123,10 @@ router.post('/login', [
   }
 });
 
-// Get current user
+// Get current user - pastikan role ikut
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId).select('-password'); // Exclude password tapi include role
     res.json({
       success: true,
       user
